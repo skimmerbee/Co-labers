@@ -11,9 +11,8 @@ app.use(bodyParser.json());
 
 // PostgreSQL pool setup
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Use environment variable
+  connectionString: 'postgresql://postgres.eiolfummhcqcwvmljtjy:SkimmerB**6060@aws-0-ap-south-1.pooler.supabase.com:6543/postgres',
 });
-
 // Check username availability endpoint
 app.get('/check-username', async (req, res) => {
   const { username } = req.query;
