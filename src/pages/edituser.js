@@ -22,21 +22,29 @@ const UserProfileEdit = () => {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
+    const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
+    
         if (!cookies.user || username !== cookies.user) {
             setError('Permission denied.');
             setLoading(false);
             return;
         }
-
+    
+        if (!isValidEmail(email)) {
+            setError('Invalid email format.');
+            setLoading(false);
+            return;
+        }
+    
         const data = {
             username,
             bio,
-            tags: `{${tags.split(',').map(tag => tag.trim()).join('","')}}`, // Adjust the tags formatting
+            tags: tags.split(',').map(tag => tag.trim()), // Adjust as needed
             location,
             contact: {
                 website,
@@ -45,7 +53,7 @@ const UserProfileEdit = () => {
                 email,
             },
         };
-
+    
         try {
             const response = await fetch('http://localhost:5000/edit-post', {
                 method: 'PUT',
@@ -55,7 +63,7 @@ const UserProfileEdit = () => {
                 body: JSON.stringify(data),
                 credentials: 'include',
             });
-
+    
             if (response.ok) {
                 setSuccess(true);
                 console.log('Profile updated successfully.');
@@ -69,6 +77,7 @@ const UserProfileEdit = () => {
             setLoading(false);
         }
     };
+    
 
     const handleHomeClick = () => navigate('/main');
     const handleAddClick = () => navigate('/add');

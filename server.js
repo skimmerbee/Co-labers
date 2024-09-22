@@ -87,7 +87,7 @@ app.get('/profile/:username', async (req, res) => {
   }
 });
 
-
+/*
 app.post('/addpost', async (req, res) => {
   const { username, content, tags, date_posted } = req.body;
 
@@ -101,7 +101,7 @@ app.post('/addpost', async (req, res) => {
   }
 });
 
-
+*/
 
 // Registration endpoint
 app.post('/register', async (req, res) => {
@@ -178,34 +178,30 @@ app.post('/addpost', async (req, res) => {
 });
 
 
-app.get('/tiles/:tag', async (req, res) => {
-  const { tag } = req.params; // Use route parameter for a single tag
+app.get('/tiles/tag/:tag', async (req, res) => {
+  const { tag } = req.params;
 
   try {
-    const query = 'SELECT * FROM tiles WHERE tags = $1 ORDER BY date_posted DESC'; // Query for a single tag
-    const params = [tag]; // Set params with the single tag
-
-    const result = await pool.query(query, params);
+    const query = 'SELECT * FROM tiles WHERE tags = $1 ORDER BY date_posted DESC';
+    const result = await pool.query(query, [tag]);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching tiles:', error);
+    console.error('Error fetching tiles by tag:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-app.get('/tiles/:username', async (req, res) => {
+app.get('/tiles/user/:username', async (req, res) => {
   const { username } = req.params;
 
   try {
     const query = 'SELECT * FROM tiles WHERE username::text = $1 ORDER BY date_posted DESC';
     const result = await pool.query(query, [username]);
     
-    // Log the retrieved tiles for debugging
     console.log('Tiles retrieved:', result.rows);
-
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching tiles:', error);
+    console.error('Error fetching tiles by username:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -215,7 +211,7 @@ app.get('/tiles', async (req, res) => {
   const { username } = req.params;
 
   try {
-    const result = await pool.query('SELECT * FROM tiles ORDER BY date_posted DESC');
+    const result = await pool.query('SELECT * FROM tiles ORDER BY date_posted DESC;');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching tiles:', error);
@@ -233,23 +229,36 @@ app.put('/edit-post', async (req, res) => {
   }
 
   try {
-    // Ensure the username exists before updating
-    const userExists = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    // Fetch the user ID from the users table
+    const userResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
 
-    if (userExists.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(404).send('User not found.');
     }
 
-    // Update the user's profile (bio, tags, location, contact)
-    await pool.query(
-      'UPDATE user_profiles SET bio = $1, tags = $2, location = $3, contact_info = $4 WHERE username = $5',
-      [bio, tags, location, contact, username]
-    );
+    const userId = userResult.rows[0].id; // Use a clear variable name for the user ID
 
-    res.status(200).send('Profile updated successfully.');
+    // Check if the user profile exists
+    const profileResult = await pool.query('SELECT * FROM user_profiles WHERE id = $1', [userId]);
+
+    if (profileResult.rows.length > 0) {
+      // Update the existing profile
+      await pool.query(
+        'UPDATE user_profiles SET bio = $1, tags = $2, location = $3, contact_info = $4 WHERE userid = $5',
+        [bio, tags, location, contact, userId]
+      );
+      return res.status(200).send('Profile updated successfully.');
+    } else {
+      // Create a new profile if it does not exist
+      await pool.query(
+        'INSERT INTO user_profiles (id, username, bio, tags, location, contact_info) VALUES ($1, $2, $3, $4, $5, $6)',
+        [userId, username, bio, tags, location, contact]
+      );
+      return res.status(201).send('Profile created successfully.');
+    }
   } catch (error) {
-    console.error('Error updating profile:', error);
-    res.status(500).send('Server error occurred while updating profile.');
+    console.error('Error processing request:', error);
+    res.status(500).send('Server error occurred while processing the request.');
   }
 });
 

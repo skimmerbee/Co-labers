@@ -51,18 +51,29 @@ const UserProfile = ({ loggedInUsername }) => {
           data.contact_info = JSON.parse(data.contact_info);
         }
     
+        // Parse tags if it's a string
+        if (data.tags && typeof data.tags === 'string') {
+          data.tags = data.tags.split(','); // Convert to array
+        }
+    
         setProfile(data);
       } catch (error) {
         console.error('Error fetching profile:', error);
         setError('Failed to load profile. Please try again later.');
+    
+        // Optional: Handle specific status codes
+        if (error.response && error.response.status === 404) {
+          setError('Profile not found.');
+        }
       }
     };
+    
     
     const fetchTiles = async (username) => {
       if (username) {
         setLoadingTiles(true);
         try {
-          const response = await axios.get(`http://localhost:5000/tiles/${cookies}`);
+          const response = await axios.get(`http://localhost:5000/tiles/user/${username}`); // Updated endpoint
           console.log('Tiles data:', response.data);
           setTiles(response.data);
         } catch (error) {
@@ -77,7 +88,7 @@ const UserProfile = ({ loggedInUsername }) => {
     
 
     fetchProfile();
-    fetchTiles();
+    fetchTiles(username);
 
     const handleScroll = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 50) {

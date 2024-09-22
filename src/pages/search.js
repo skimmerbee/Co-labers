@@ -67,13 +67,14 @@ const Search = () => {
   const handleSearch = async () => {
     if (selectedTag) {
       try {
-        const response = await axios.get(`http://localhost:5000/tiles/${selectedTag}`);
+        const response = await axios.get(`http://localhost:5000/tiles/tag/${selectedTag}`); // Updated endpoint
         setResults(response.data);
       } catch (error) {
         console.error('Error fetching search results:', error);
       }
     }
   };
+  
 
   return (
     <div className='bodyx'>
