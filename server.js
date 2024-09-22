@@ -37,7 +37,7 @@ app.get('/check-username', async (req, res) => {
 });
 
 // Login endpoint
-app.post('/login', async (req, res) => {
+app.post('server/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
