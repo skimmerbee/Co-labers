@@ -6,16 +6,12 @@ const { Pool } = require('pg');
 const app = express();
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: 'https://your-vercel-deployment-url.vercel.app', credentials: true }));
 app.use(bodyParser.json());
 
 // PostgreSQL pool setup
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'Users', // Ensure the database name is lowercase
-  password: '123',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL, // Use environment variable
 });
 
 // Check username availability endpoint
@@ -87,22 +83,6 @@ app.get('/profile/:username', async (req, res) => {
   }
 });
 
-/*
-app.post('/addpost', async (req, res) => {
-  const { username, content, tags, date_posted } = req.body;
-
-  try {
-      const query = 'INSERT INTO tiles (username, content, tags, date_posted) VALUES ($1, $2, $3, $4)';
-      await pool.query(query, [username, content, tags, date_posted]);
-      res.status(201).json({ message: 'Post added successfully!' });
-  } catch (error) {
-      console.error('Error adding post:', error);
-      res.status(500).json({ error: 'Failed to add post' });
-  }
-});
-
-*/
-
 // Registration endpoint
 app.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
@@ -136,11 +116,11 @@ app.post('/register', async (req, res) => {
 
 app.get('/tags', async (req, res) => {
   try {
-      const result = await pool.query('SELECT name FROM tags');
-      res.json(result.rows);
+    const result = await pool.query('SELECT name FROM tags');
+    res.json(result.rows);
   } catch (err) {
-      console.error('Error fetching tags:', err.message);
-      res.status(500).json({ error: 'Failed to fetch tags' });
+    console.error('Error fetching tags:', err.message);
+    res.status(500).json({ error: 'Failed to fetch tags' });
   }
 });
 
@@ -177,6 +157,7 @@ app.post('/addpost', async (req, res) => {
   }
 });
 
+// Other endpoints...
 
 app.get('/tiles/tag/:tag', async (req, res) => {
   const { tag } = req.params;
@@ -206,10 +187,7 @@ app.get('/tiles/user/:username', async (req, res) => {
   }
 });
 
-
 app.get('/tiles', async (req, res) => {
-  const { username } = req.params;
-
   try {
     const result = await pool.query('SELECT * FROM tiles ORDER BY date_posted DESC;');
     res.json(result.rows);
@@ -218,7 +196,6 @@ app.get('/tiles', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 // Edit post endpoint
 app.put('/edit-post', async (req, res) => {
@@ -229,27 +206,23 @@ app.put('/edit-post', async (req, res) => {
   }
 
   try {
-    // Fetch the user ID from the users table
     const userResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
 
     if (userResult.rows.length === 0) {
       return res.status(404).send('User not found.');
     }
 
-    const userId = userResult.rows[0].id; // Use a clear variable name for the user ID
+    const userId = userResult.rows[0].id;
 
-    // Check if the user profile exists
     const profileResult = await pool.query('SELECT * FROM user_profiles WHERE id = $1', [userId]);
 
     if (profileResult.rows.length > 0) {
-      // Update the existing profile
       await pool.query(
         'UPDATE user_profiles SET bio = $1, tags = $2, location = $3, contact_info = $4 WHERE userid = $5',
         [bio, tags, location, contact, userId]
       );
       return res.status(200).send('Profile updated successfully.');
     } else {
-      // Create a new profile if it does not exist
       await pool.query(
         'INSERT INTO user_profiles (id, username, bio, tags, location, contact_info) VALUES ($1, $2, $3, $4, $5, $6)',
         [userId, username, bio, tags, location, contact]
@@ -262,15 +235,10 @@ app.put('/edit-post', async (req, res) => {
   }
 });
 
-
-
-
-
-
-
 // Start the server
-app.listen(5000, () => {
-  console.log('Server is running on port 5000');
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
-
+module.exports = app; // Export the app for Vercel
