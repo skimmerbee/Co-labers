@@ -13,9 +13,7 @@ app.use(bodyParser.json());
 const pool = new Pool({
   connectionString: 'postgresql://postgres.eiolfummhcqcwvmljtjy:SkimmerB**6060@aws-0-ap-south-1.pooler.supabase.com:6543/postgres',
 });
-app.get('/', (req, res) => {
-  res.send('Welcome to the API!'); // Basic response for root URL
-});
+
 // Check username availability endpoint
 app.get('/check-username', async (req, res) => {
   const { username } = req.query;
