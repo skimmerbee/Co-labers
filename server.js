@@ -6,7 +6,7 @@ const { Pool } = require('pg');
 const app = express();
 
 // Middleware
-app.use(cors({ origin: 'https://your-vercel-deployment-url.vercel.app', credentials: true }));
+app.use(cors({ origin: 'https://co-laber.vercel.app/', credentials: true }));
 app.use(bodyParser.json());
 
 // PostgreSQL pool setup
