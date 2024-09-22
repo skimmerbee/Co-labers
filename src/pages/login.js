@@ -17,7 +17,7 @@ const Login = () => {
 
     try {
       // Send login request to the server
-      const response = await fetch('https://co-laber.vercel.app/login', {
+      const response = await fetch('https://co-laber.vercel.app/server/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }), // Send email and password
